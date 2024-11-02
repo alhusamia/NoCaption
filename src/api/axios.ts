@@ -2,7 +2,6 @@ import axios from 'axios';
 import {Platform} from 'react-native';
 import uuid from 'react-native-uuid';
 import DeviceInfo from 'react-native-device-info';
-
 import Env from '../../env';
 import {navigate} from '../navigation';
 import {ASYNC_STORAGE_KEYS} from '../constants';
@@ -24,20 +23,22 @@ const instance = axios.create({
     Pragma: 'no-cache',
     Expires: '0',
   },
+  sslPinning: {
+    certs: [
+      'sha256//r8udi/Mxd6pLO7y7hZyUMWq8YnFnIWXCqeHsTDRqy8=',
+      'sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=',
+      'sha256/Vjs8r4z+80wjNcr1YKepWQboSIRi63WsWXhIMN+eWys='
+    ],
+  },
 });
 
 instance.interceptors.request.use(async function (request) {
   request.headers['X-Request-Id'] = uuid.v4();
-  // request.cancelToken = cancelTokenSource.token;
-  // console.log('========= REQUEST HEADERS =========', request.headers);
-  // console.log('========= REQUEST DATA =========', request.data);
   return request;
 });
 
 instance.interceptors.response.use(
   function (response) {
-    // console.log('========= RESPONSE HEADERS =========', response?.headers);
-    // console.log('========= RESPONSE DATA =========', response.data);
     return response;
   },
   function (error) {
@@ -46,15 +47,11 @@ instance.interceptors.response.use(
       error?.response?.headers['status.code'];
 
     console.log('========= ERR RESPONSE URL', error.response.config.url);
-    console.log(
-      '========= ERR RESPONSE HEADERS =========',
-      error.response?.headers,
-    );
+    console.log('========= ERR RESPONSE HEADERS =========', error.response?.headers);
     console.log('========= ERR RESPONSE DATA =========', error.response.data);
     if (error.response) {
       if (['E200986'].includes(code)) {
         storeData(ASYNC_STORAGE_KEYS.IS_LOGGED_IN, 'false');
-
         removeTokenFromAxiosInstance();
         navigate('Login'); // return to login
       }
